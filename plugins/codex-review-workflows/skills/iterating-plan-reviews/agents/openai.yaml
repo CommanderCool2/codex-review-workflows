@@ -1,0 +1,4 @@
+interface:
+  display_name: "Iterative Plan Review"
+  short_description: "Review implementation plans until clean"
+  default_prompt: "Use $iterating-plan-reviews to review the implementation plan against its approved spec until the independent reviewer reports no findings."

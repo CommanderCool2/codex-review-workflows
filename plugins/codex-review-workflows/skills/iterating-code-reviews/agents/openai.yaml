@@ -1,0 +1,4 @@
+interface:
+  display_name: "Iterating Code Reviews"
+  short_description: "Run an independent review-and-fix cycle"
+  default_prompt: "Use $iterating-code-reviews after implementing this plan to run an independent code-review cycle."
