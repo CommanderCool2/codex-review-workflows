@@ -5,6 +5,14 @@ An installable Codex plugin containing two reusable review workflows:
 - `iterating-plan-reviews` independently reviews an implementation plan against its approved design until the same reviewer reports no findings.
 - `iterating-code-reviews` runs a visible, independent code-review-and-fix loop after implementation until the same reviewer returns `No findings.`
 
+## Prerequisites
+
+Install the **Superpowers** plugin separately. Both iterative workflows use its `superpowers:receiving-code-review` and `superpowers:verification-before-completion` skills.
+
+```powershell
+codex plugin add superpowers@superpowers
+```
+
 ## Install
 
 Add this repository as a Codex plugin marketplace:
@@ -71,7 +79,8 @@ plugins/codex-review-workflows/
 |-- .codex-plugin/plugin.json
 `-- skills/
     |-- iterating-plan-reviews/
-    `-- iterating-code-reviews/
+    |-- iterating-code-reviews/
+    `-- verifying-implementation-plans/
 ```
 
 ## License
