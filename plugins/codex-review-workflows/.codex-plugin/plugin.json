@@ -1,6 +1,6 @@
 {
   "name": "codex-review-workflows",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Iterative, independent review workflows for implementation plans and code changes.",
   "author": {
     "name": "CommanderCool2",
