@@ -84,7 +84,7 @@ You need:
 - A Codex desktop workspace that can expose the current branch, working tree, project, and visible tasks to the workflow.
 - Relevant verification commands or evidence for the implementation.
 
-The implementation does not have to be fully committed: the reviewer inspects both the current branch and its working tree, including uncommitted changes. The task invoking the skill first asks which model and reasoning effort to use for the review. It then creates one visible, context-isolated reviewer task and reuses that same task for every review round.
+The implementation does not have to be fully committed: the reviewer inspects both the current branch and its working tree, including uncommitted changes. The task invoking the skill first offers GPT-5.6 Sol with high reasoning, while allowing another supported model and reasoning effort. It then creates one visible, context-isolated reviewer task and reuses that same task for every review round.
 
 The implementation task remains the sole editor. The reviewer stays read-only. Valid findings are fixed and verified in the implementation task; incorrect findings receive evidence-based pushback. The workflow asks you before changing the approved specification, an approved decision, or the product scope.
 
@@ -94,7 +94,7 @@ Invoke the skill from the implementation task and include the artifact paths:
 Use $iterating-code-reviews to review this implementation using docs/superpowers/plans/FEATURE.md and docs/superpowers/specs/FEATURE.md.
 ```
 
-The code review is complete only after the same reviewer rereads the current code and the complete relevant diff, returns exactly `No findings.`, and the implementation passes final verification. The reviewer task remains visible as an audit trail.
+The code review is complete only after the same reviewer rereads the current code and the complete relevant diff, returns `No findings.` with the required review evidence and no residual verification gaps, and the implementation passes final verification. The reviewer task remains visible as an audit trail.
 
 ## Update
 
