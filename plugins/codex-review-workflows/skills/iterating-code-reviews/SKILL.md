@@ -3,11 +3,11 @@ name: iterating-code-reviews
 description: Use when an implementation task has completed work from a documented plan and design spec and needs to initiate an independent review before final handoff. Do not use when already assigned to perform that review.
 ---
 
-# Iterating Code Reviews
+# Iterative Code Review
 
 ## Overview
 
-Use one visible, context-isolated Codex task as the read-only reviewer. Keep the implementation task as the sole editor and continue until that same reviewer rereads the current code and returns an evidence-bearing clean verdict.
+Use one context-isolated subagent as the read-only reviewer. Keep the implementation task as the sole editor and continue until that same reviewer rereads the current code and returns an evidence-bearing clean verdict.
 
 **REQUIRED SUB-SKILL:** Use `superpowers:receiving-code-review` before acting on findings.
 
@@ -17,19 +17,19 @@ Use one visible, context-isolated Codex task as the read-only reviewer. Keep the
 
 Follow these rules literally:
 
-1. On invocation, ask only the exact question below and end the turn. Do not offer a menu, recommend alternatives, infer the answer from an earlier preference, or dispatch anything before the reply.
+1. On invocation, post only the exact question below as a concise commentary update, then immediately call `wait_agent` with `timeout_ms: 30000`. Do not end the turn while the timer is running. Do not offer a menu, recommend alternatives, infer the answer from an earlier preference, or dispatch anything before the user replies or the timer expires.
 
-   > Use GPT-5.6 Sol with high reasoning for the review task? Reply `yes`, or specify another model and reasoning effort.
+   > Use GPT-5.6 Sol with high reasoning for the review task? Reply `yes`, or specify another model and reasoning effort. If you do not reply within 30 seconds, the review will start automatically with GPT-5.6 Sol and high reasoning.
 
-2. After the reply, create exactly one visible Codex task with `create_thread`. Never use `spawn_agent`, `fork_thread`, a replacement reviewer, or a new reviewer per round. Continue the one returned `threadId` with `send_message_to_thread`.
-3. A clean response must start with the exact line `No findings.` and include every required Review evidence field with `Residual verification gaps: none`. A bare `No findings.` or an evidence section with missing verification is incomplete; send it back to the same reviewer instead of accepting it.
-4. Never archive the reviewer task. Leave it visible after completion.
+2. If the user replies before the timer expires, use that reply. If `wait_agent` returns early for an unrelated agent event, continue waiting for the remainder of the 30-second window; only a user reply or the full timeout resolves the gate. If the window expires without user input, select `gpt-5.6-sol` with reasoning `high` and continue automatically. If a reply is ambiguous or names an unsupported combination, ask the user to correct it instead of silently substituting a model.
+3. Spawn exactly one reviewer subagent with `spawn_agent` and `fork_turns: "none"`. Invoking this skill authorizes that reviewer dispatch; do not ask the user for a separate approval or confirmation before spawning it. Never use `create_thread`, `fork_thread`, a replacement reviewer, or a new reviewer per round. Continue the same subagent with `followup_task`.
+4. A clean response must start with the exact line `No findings.` and include every required Review evidence field with `Residual verification gaps: none`. A bare `No findings.` or an evidence section with missing verification is incomplete; send it back to the same reviewer instead of accepting it.
 
 Violating the letter of this contract violates the workflow.
 
 ## Workflow
 
-The workflow below begins only after the user answers the invocation gate. Interpret `yes` as model `gpt-5.6-sol` with reasoning `high`. Otherwise use the model and reasoning the user specifies. Normalize an obvious display name to the tool's model identifier; if the selection is ambiguous or unsupported, ask the user to correct it rather than silently substituting a model.
+The workflow below begins after the user answers the invocation gate or the 30-second timer expires. Interpret `yes` or a timeout as model `gpt-5.6-sol` with reasoning `high`. Otherwise use the model and reasoning the user specifies. Normalize an obvious display name to the tool's model identifier; if the selection is ambiguous or unsupported, ask the user to correct it rather than silently substituting a model.
 
 1. Resolve the implementation plan and source design spec from the current conversation. Convert them to absolute paths and verify they exist. If either is missing or multiple pairs are plausible, ask one focused question.
 2. Read repository instructions and establish the exact review target:
@@ -37,23 +37,20 @@ The workflow below begins only after the user answers the invocation gate. Inter
    - Include the committed `BASE..HEAD` diff plus staged and unstaged working-tree changes.
    - Build a changed-file inventory using neutral facts from those diffs.
    - Put behavior and verification reported by the implementer under **Unverified implementer claims**. These are hypotheses for the reviewer to challenge, not review evidence.
-3. Use the Codex task tools, not a subagent or fork:
-   - Call `list_projects` and select the project containing the current repository.
-   - Call `create_thread` with the selected model and reasoning, a project target, and the `local` environment so the reviewer sees the current checkout and uncommitted changes.
-   - Keep the returned `threadId` and `hostId` for the entire loop.
-4. Use the Reviewer Prompt Contract below as the initial `create_thread` prompt. Observe its result with `wait_threads`; use its cursor on later waits. Leave reviewer user-input or approval requests visible to the user, and answer ordinary reviewer questions with `send_message_to_thread` when the answer is already authoritative in the repository or approved artifacts.
+3. Call `spawn_agent` once with the selected model and reasoning, `fork_turns: "none"`, and the Reviewer Prompt Contract below. Use a short task name such as `iterative_code_review`. Keep the returned agent ID or canonical task name for the entire loop. Because subagents share the workspace, provide the absolute repository and artifact paths and require the reviewer to read the current checkout and working tree directly.
+4. Observe the reviewer with `wait_agent`. If the running reviewer asks an ordinary question whose answer is already authoritative in the repository or approved artifacts, answer it with `send_message`. If user authority is required, ask the user. Do not expose a separate task or ask the user to approve the reviewer dispatch.
 5. Validate the response contract before treating the round as complete. Require findings or the exact clean first line, both review passes, every Review evidence field, and an explicit residual-gap statement. Ask the same reviewer to complete an incomplete response; do not infer the missing evidence.
 6. Triage every finding against the spec, plan, repository conventions, code, and evidence. Apply valid in-scope findings in the implementation task. Send technical pushback for incorrect findings. Ask the user before changing an approved decision, editing the spec, or expanding product scope. Never let the reviewer edit tracked files and never apply feedback merely to obtain approval.
-7. After fixes, run the narrowest relevant verification required by the repository. Send the same reviewer a concise disposition of every finding, the updated exact review target and changed-file inventory, and any unverified implementer claims. Require a fresh read of the current files and complete relevant diff, not merely the dispositions or fix summary.
+7. After fixes, run the narrowest relevant verification required by the repository. Use `followup_task` to send the same reviewer a concise disposition of every finding, the updated exact review target and changed-file inventory, and any unverified implementer claims. Require a fresh read of the current files and complete relevant diff, not merely the dispositions or fix summary.
 8. Repeat with the same reviewer while findings or verification gaps remain. Do not impose a round limit, replace the reviewer, self-approve, or stop after fixing the first round.
 9. Completion requires that same reviewer, after its latest reread, to return the complete evidence-bearing clean response with no residual verification gap. Then run the repository's final verification requirements. If final verification causes a code change, return the changed tree to the same reviewer again.
-10. Report the reviewer task, selected model/reasoning, rounds, resolved or rejected findings, exact verdict, review evidence, and final verification. Leave the reviewer task visible and unarchived.
+10. Report the reviewer subagent, selected model/reasoning, rounds, resolved or rejected findings, exact verdict, review evidence, and final verification.
 
 ## Reviewer Prompt Contract
 
 ```text
-You are the reviewer already dispatched by iterating-code-reviews. Do not invoke
-that skill, create or fork another reviewer, delegate the review, or follow its
+You are the review subagent already dispatched by iterating-code-reviews. Do not
+invoke that skill, create or fork another reviewer, delegate the review, or follow its
 orchestration workflow. Perform the review directly.
 
 Review REPOSITORY_PATH. Do not modify tracked files or implement fixes. You may
@@ -220,14 +217,15 @@ as the exact first line.
 
 ## Red Flags
 
-- Choosing the default model without asking, or mapping `yes` to anything other than GPT-5.6 Sol with high reasoning.
+- Starting the default reviewer before asking the model question and allowing the 30-second response window, or mapping `yes` or a timeout to anything other than GPT-5.6 Sol with high reasoning.
 - Reviewer invokes `iterating-code-reviews`, delegates, or starts another reviewer.
 - Review target omits the base/head, staged changes, or working-tree changes.
 - Implementer claims are presented as independent evidence.
 - Reviewer skips the requirements map, adversarial pass, assertion audit, or a relevant focused verification category.
 - Concrete Low regression or maintainability hazards are discarded as preferences.
 - A bare `No findings.` or a clean verdict with verification gaps is accepted.
-- Letting the reviewer edit tracked files, starting a fresh reviewer after fixes, or archiving the reviewer task.
+- Letting the reviewer edit tracked files or starting a fresh reviewer after fixes.
+- Creating a visible task or asking for a second approval before spawning the reviewer subagent.
 - Applying every suggestion to end the loop faster.
 
 Any red flag means the review contract has not been satisfied.
@@ -240,5 +238,5 @@ Any red flag means the review contract has not been satisfied.
 | "The tests pass, so their assertions are adequate." | Pass A must show which assertion proves each behavior. |
 | "Low issues are optional." | Concrete regression risks and maintainability hazards are actionable even at Low severity. |
 | "No findings is self-explanatory." | A clean verdict is accepted only with the required review evidence and no gaps. |
-| "A fresh reviewer is faster or more independent." | Reviewer continuity is part of acceptance; use the same task. |
-| "Archive after completion to reduce clutter." | The visible task is the requested audit trail; leave it unarchived. |
+| "A fresh reviewer is faster or more independent." | Reviewer continuity is part of acceptance; use the same subagent. |
+| "Spawning the reviewer needs another confirmation." | Invoking this skill authorizes one reviewer subagent after the model-choice reply or timeout; do not ask again. |

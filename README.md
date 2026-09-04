@@ -3,7 +3,7 @@
 An installable Codex plugin containing two reusable review workflows:
 
 - `iterating-plan-reviews` independently reviews an implementation plan against its approved design until the same reviewer reports no findings.
-- `iterating-code-reviews` runs a visible, independent code-review-and-fix loop after implementation until the same reviewer returns `No findings.`
+- **Iterative Code Review** (`iterating-code-reviews`) runs an independent subagent review-and-fix loop after implementation until the same reviewer returns `No findings.`
 
 ## Who this plugin is for
 
@@ -12,10 +12,10 @@ This plugin is for people using Codex to plan and implement changes in a local G
 | Workflow | Intended environment | Required capabilities |
 |---|---|---|
 | Plan review | Codex desktop app, CLI, or IDE extension | Local repository and file access, installed skills, and enabled subagents |
-| Code review | Codex desktop app with a local workspace | Local Git and working-tree access plus visible Codex project and task controls |
+| Code review | Codex environment with a local workspace | Local Git and working-tree access plus enabled subagents |
 | Other agents or IDEs | Unsupported unless adapted | Support for the plugin format and every tool contract used by the selected workflow |
 
-Installing or copying the Markdown skill files is not enough if the environment cannot spawn and continue the required reviewer or expose the current repository state. In particular, do not install this plugin for the code-review workflow unless your Codex environment can create and continue a visible reviewer task in the same local project.
+Installing or copying the Markdown skill files is not enough if the environment cannot spawn and continue the required reviewer or expose the current repository state. In particular, do not install this plugin for the code-review workflow unless your Codex environment supports context-isolated subagents that share the local workspace.
 
 ## Prerequisites
 
@@ -73,7 +73,7 @@ Use $iterating-plan-reviews to review docs/superpowers/plans/FEATURE.md against 
 
 The plan is ready only after the same reviewer rereads the current files and returns the exact no-findings verdict required by the skill.
 
-### Review a completed implementation
+### Review a completed implementation with Iterative Code Review
 
 Use `iterating-code-reviews` after completing the implementation of a documented plan and before final handoff.
 
@@ -81,10 +81,10 @@ You need:
 
 - The completed implementation available locally on a feature branch.
 - The approved source specification and implementation plan stored as files with unambiguous paths.
-- A Codex desktop workspace that can expose the current branch, working tree, project, and visible tasks to the workflow.
+- A Codex workspace that exposes the current branch and working tree to enabled subagents.
 - Relevant verification commands or evidence for the implementation.
 
-The implementation does not have to be fully committed: the reviewer inspects both the current branch and its working tree, including uncommitted changes. The task invoking the skill first offers GPT-5.6 Sol with high reasoning, while allowing another supported model and reasoning effort. It then creates one visible, context-isolated reviewer task and reuses that same task for every review round.
+The implementation does not have to be fully committed: the reviewer inspects both the current branch and its working tree, including uncommitted changes. The task invoking the skill first offers GPT-5.6 Sol with high reasoning, while allowing another supported model and reasoning effort. If you do not reply within 30 seconds, it selects GPT-5.6 Sol with high reasoning automatically. It then spawns one context-isolated reviewer subagent without a separate approval prompt and reuses that same subagent for every review round.
 
 The implementation task remains the sole editor. The reviewer stays read-only. Valid findings are fixed and verified in the implementation task; incorrect findings receive evidence-based pushback. The workflow asks you before changing the approved specification, an approved decision, or the product scope.
 
@@ -94,7 +94,7 @@ Invoke the skill from the implementation task and include the artifact paths:
 Use $iterating-code-reviews to review this implementation using docs/superpowers/plans/FEATURE.md and docs/superpowers/specs/FEATURE.md.
 ```
 
-The code review is complete only after the same reviewer rereads the current code and the complete relevant diff, returns `No findings.` with the required review evidence and no residual verification gaps, and the implementation passes final verification. The reviewer task remains visible as an audit trail.
+The code review is complete only after the same reviewer rereads the current code and the complete relevant diff, returns `No findings.` with the required review evidence and no residual verification gaps, and the implementation passes final verification.
 
 ## Update
 
