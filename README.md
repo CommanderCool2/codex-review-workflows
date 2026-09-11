@@ -4,18 +4,18 @@ An installable Codex plugin containing three reusable review workflows:
 
 - `reviewing-design-specs` checks a completed Superpowers design specification against all adopted session decisions and user-provided source material, then fixes the findings.
 - `iterating-plan-reviews` independently reviews an implementation plan against its approved design until the same reviewer reports no findings.
-- **Iterative Code Review** (`iterating-code-reviews`) runs an independent subagent review-and-fix loop after implementation until the same reviewer returns `No findings.`
+- `iterating-code-reviews` runs an independent subagent review-and-fix loop after implementation until the same reviewer returns `No findings.`
 
 ## Who this plugin is for
 
 This plugin is for people using Codex to plan and implement changes in a local Git repository. Every workflow depends on Codex skills and repository access; the iterative plan and code reviews also depend on subagents. They are not portable prompt templates for arbitrary coding agents or IDE assistants.
 
-| Workflow | Intended environment | Required capabilities |
-|---|---|---|
-| Design-spec review | The Codex task in which the specification was developed | Full task context plus access to the specification and referenced source material |
-| Plan review | Codex desktop app, CLI, or IDE extension | Local repository and file access, installed skills, and enabled subagents |
-| Code review | Codex environment with a local workspace | Local Git and working-tree access plus enabled subagents |
-| Other agents or IDEs | Unsupported unless adapted | Support for the plugin format and every tool contract used by the selected workflow |
+| Workflow             | Intended environment                                    | Required capabilities                                                               |
+| -------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Design-spec review   | The Codex task in which the specification was developed | Full task context plus access to the specification and referenced source material   |
+| Plan review          | Codex desktop app, CLI, or IDE extension                | Local repository and file access, installed skills, and enabled subagents           |
+| Code review          | Codex environment with a local workspace                | Local Git and working-tree access plus enabled subagents                            |
+| Other agents or IDEs | Unsupported unless adapted                              | Support for the plugin format and every tool contract used by the selected workflow |
 
 For the iterative workflows, installing or copying the Markdown skill files is not enough if the environment cannot spawn and continue the required reviewer or expose the current repository state. In particular, do not use the code-review workflow unless your Codex environment supports context-isolated subagents that share the local workspace.
 
