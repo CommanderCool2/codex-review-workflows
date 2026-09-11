@@ -3,7 +3,7 @@
 An installable Codex plugin containing three reusable review workflows:
 
 - `reviewing-design-specs` checks a completed Superpowers design specification against all adopted session decisions and user-provided source material, then fixes the findings.
-- `iterating-plan-reviews` independently reviews an implementation plan against its approved design until the same reviewer reports no findings.
+- `iterating-plan-reviews` independently reviews an implementation plan against its approved design until the same reviewer reports `No findings.`
 - `iterating-code-reviews` runs an independent subagent review-and-fix loop after implementation until the same reviewer returns `No findings.`
 
 ## Who this plugin is for
