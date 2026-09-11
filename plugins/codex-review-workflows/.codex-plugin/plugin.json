@@ -1,7 +1,7 @@
 {
   "name": "codex-review-workflows",
-  "version": "1.0.2",
-  "description": "Iterative, independent review workflows for implementation plans and code changes.",
+  "version": "1.1.0",
+  "description": "Review workflows for design specifications, implementation plans, and code changes.",
   "author": {
     "name": "CommanderCool2",
     "url": "https://github.com/CommanderCool2"
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Codex Review Workflows",
-    "shortDescription": "Iterate on plan and code reviews until clean.",
-    "longDescription": "Run rigorous independent review loops for implementation plans and completed code changes, preserving reviewer continuity until all actionable findings are resolved.",
+    "shortDescription": "Review design specs, plans, and code changes.",
+    "longDescription": "Audit completed design specifications against session decisions and run rigorous independent review loops for implementation plans and code changes.",
     "developerName": "CommanderCool2",
     "category": "Productivity",
     "capabilities": [
@@ -28,6 +28,7 @@
     ],
     "websiteURL": "https://github.com/CommanderCool2/codex-review-workflows",
     "defaultPrompt": [
+      "Review this completed design specification against the session decisions.",
       "Review this implementation plan until it is clean.",
       "Run an independent review-and-fix cycle on this code."
     ]

@@ -1,21 +1,23 @@
 # Codex Review Workflows
 
-An installable Codex plugin containing two reusable review workflows:
+An installable Codex plugin containing three reusable review workflows:
 
+- `reviewing-design-specs` checks a completed Superpowers design specification against all adopted session decisions and user-provided source material, then fixes the findings.
 - `iterating-plan-reviews` independently reviews an implementation plan against its approved design until the same reviewer reports no findings.
 - **Iterative Code Review** (`iterating-code-reviews`) runs an independent subagent review-and-fix loop after implementation until the same reviewer returns `No findings.`
 
 ## Who this plugin is for
 
-This plugin is for people using Codex to plan and implement changes in a local Git repository. The workflows depend on Codex skills, repository access, and agent/task tools; they are not portable prompt templates for arbitrary coding agents or IDE assistants.
+This plugin is for people using Codex to plan and implement changes in a local Git repository. Every workflow depends on Codex skills and repository access; the iterative plan and code reviews also depend on subagents. They are not portable prompt templates for arbitrary coding agents or IDE assistants.
 
 | Workflow | Intended environment | Required capabilities |
 |---|---|---|
+| Design-spec review | The Codex task in which the specification was developed | Full task context plus access to the specification and referenced source material |
 | Plan review | Codex desktop app, CLI, or IDE extension | Local repository and file access, installed skills, and enabled subagents |
 | Code review | Codex environment with a local workspace | Local Git and working-tree access plus enabled subagents |
 | Other agents or IDEs | Unsupported unless adapted | Support for the plugin format and every tool contract used by the selected workflow |
 
-Installing or copying the Markdown skill files is not enough if the environment cannot spawn and continue the required reviewer or expose the current repository state. In particular, do not install this plugin for the code-review workflow unless your Codex environment supports context-isolated subagents that share the local workspace.
+For the iterative workflows, installing or copying the Markdown skill files is not enough if the environment cannot spawn and continue the required reviewer or expose the current repository state. In particular, do not use the code-review workflow unless your Codex environment supports context-isolated subagents that share the local workspace.
 
 ## Prerequisites
 
@@ -24,9 +26,9 @@ Before installing, make sure that:
 - Your work is in a local Git repository that Codex can read.
 - Codex can read the repository instructions and run its relevant verification commands.
 - Your environment provides the capabilities listed above for the workflow you want to use.
-- You can allow for multiple review rounds. Each reviewer round uses additional model tokens and time.
+- For iterative plan or code reviews, you can allow for multiple review rounds. Each reviewer round uses additional model tokens and time.
 
-Install the **Superpowers** plugin separately. Both iterative workflows use its `superpowers:receiving-code-review` and `superpowers:verification-before-completion` skills.
+Install the **Superpowers** plugin separately. The design-spec review targets specifications developed with Superpowers, and both iterative workflows use its `superpowers:receiving-code-review` and `superpowers:verification-before-completion` skills.
 
 ```powershell
 codex plugin add superpowers@superpowers
@@ -51,6 +53,22 @@ You can also open `/plugins` in the Codex CLI or the Plugins directory in the Co
 Start a new task after installation so Codex loads the bundled skills.
 
 ## Use
+
+### Review a completed design specification
+
+Run this after a Superpowers design specification is completely written. It checks the finished specification against adopted decisions from the full task, including GitHub issues, links, pasted or copied files, and other user-provided source material.
+
+You need:
+
+- The completed specification available in the current workspace.
+- The original task context in which its requirements and design decisions were discussed.
+- Access to any linked source material that is not already present in the task context.
+
+The skill edits the specification directly, then reports material fixes and any unresolved source conflicts or unavailable inputs.
+
+```text
+Use $reviewing-design-specs to review the completed design spec against this session and fix the findings.
+```
 
 ### Review an implementation plan
 
@@ -127,8 +145,9 @@ codex plugin marketplace remove codex-review-workflows
 plugins/codex-review-workflows/
 |-- .codex-plugin/plugin.json
 `-- skills/
-    |-- iterating-plan-reviews/
     |-- iterating-code-reviews/
+    |-- iterating-plan-reviews/
+    |-- reviewing-design-specs/
     `-- verifying-implementation-plans/
 ```
 

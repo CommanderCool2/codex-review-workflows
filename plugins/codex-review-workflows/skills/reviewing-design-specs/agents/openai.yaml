@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Design Spec"
+  short_description: "Audit a finished design spec against session input"
+  default_prompt: "Use $reviewing-design-specs to review the completed design spec against this session and fix the findings."
