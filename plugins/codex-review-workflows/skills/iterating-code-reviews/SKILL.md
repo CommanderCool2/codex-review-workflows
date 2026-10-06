@@ -19,9 +19,9 @@ Follow these rules literally:
 
 1. On invocation, post only the exact question below as a concise commentary update, then immediately call `wait_agent` with `timeout_ms: 30000`. Do not end the turn while the timer is running. Do not offer a menu, recommend alternatives, infer the answer from an earlier preference, or dispatch anything before the user replies or the timer expires.
 
-   > Use GPT-6.1 Sol with high reasoning for the review task? Reply `yes`, or specify another model and reasoning effort. If you do not reply within 30 seconds, the review will start automatically with GPT-6.1 Sol and high reasoning.
+   > Use GPT-6.1 Sol with xhigh reasoning for the review task? Reply `yes`, or specify another model and reasoning effort. If you do not reply within 30 seconds, the review will start automatically with GPT-6.1 Sol and xhigh reasoning.
 
-2. If the user replies before the timer expires, use that reply. If `wait_agent` returns early for an unrelated agent event, continue waiting for the remainder of the 30-second window; only a user reply or the full timeout resolves the gate. If the window expires without user input, select `gpt-6.1-sol` with reasoning `high` and continue automatically. If a reply is ambiguous or names an unsupported combination, ask the user to correct it instead of silently substituting a model.
+2. If the user replies before the timer expires, use that reply. If `wait_agent` returns early for an unrelated agent event, continue waiting for the remainder of the 30-second window; only a user reply or the full timeout resolves the gate. If the window expires without user input, select `gpt-6.1-sol` with reasoning `xhigh` and continue automatically. If a reply is ambiguous or names an unsupported combination, ask the user to correct it instead of silently substituting a model.
 3. Spawn exactly one reviewer subagent with `spawn_agent` and `fork_turns: "none"`. Invoking this skill authorizes that reviewer dispatch; do not ask the user for a separate approval or confirmation before spawning it. Never use `create_thread`, `fork_thread`, a replacement reviewer, or a new reviewer per round. Continue the same subagent with `followup_task`.
 4. A clean response must start with the exact line `No findings.` and include every required Review evidence field with `Residual verification gaps: none`. A bare `No findings.` or an evidence section with missing verification is incomplete; send it back to the same reviewer instead of accepting it.
 
@@ -29,7 +29,7 @@ Violating the letter of this contract violates the workflow.
 
 ## Workflow
 
-The workflow below begins after the user answers the invocation gate or the 30-second timer expires. Interpret `yes` or a timeout as model `gpt-6.1-sol` with reasoning `high`. Otherwise use the model and reasoning the user specifies. Normalize an obvious display name to the tool's model identifier; if the selection is ambiguous or unsupported, ask the user to correct it rather than silently substituting a model.
+The workflow below begins after the user answers the invocation gate or the 30-second timer expires. Interpret `yes` or a timeout as model `gpt-6.1-sol` with reasoning `xhigh`. Otherwise use the model and reasoning the user specifies. Normalize an obvious display name to the tool's model identifier; if the selection is ambiguous or unsupported, ask the user to correct it rather than silently substituting a model.
 
 1. Resolve the implementation plan and source design spec from the current conversation. Convert them to absolute paths and verify they exist. If either is missing or multiple pairs are plausible, ask one focused question.
 2. Read repository instructions and establish the exact review target:
@@ -217,7 +217,7 @@ as the exact first line.
 
 ## Red Flags
 
-- Starting the default reviewer before asking the model question and allowing the 30-second response window, or mapping `yes` or a timeout to anything other than GPT-6.1 Sol with high reasoning.
+- Starting the default reviewer before asking the model question and allowing the 30-second response window, or mapping `yes` or a timeout to anything other than GPT-6.1 Sol with xhigh reasoning.
 - Reviewer invokes `iterating-code-reviews`, delegates, or starts another reviewer.
 - Review target omits the base/head, staged changes, or working-tree changes.
 - Implementer claims are presented as independent evidence.
