@@ -102,7 +102,7 @@ You need:
 - A Codex workspace that exposes the current branch and working tree to enabled subagents.
 - Relevant verification commands or evidence for the implementation.
 
-The implementation does not have to be fully committed: the reviewer inspects both the current branch and its working tree, including uncommitted changes. The task invoking the skill first offers GPT-6.1 Sol with xhigh reasoning, while allowing another supported model and reasoning effort. If you do not reply within 30 seconds, it selects GPT-6.1 Sol with xhigh reasoning automatically. It then spawns one context-isolated reviewer subagent without a separate approval prompt and reuses that same subagent for every review round.
+The implementation does not have to be fully committed: the reviewer inspects both the current branch and its working tree, including uncommitted changes. The task invoking the skill first offers GPT-6.1 Sol with high reasoning, while allowing another supported model and reasoning effort. If you do not reply within 30 seconds, it selects GPT-6.1 Sol with high reasoning automatically. It then spawns one context-isolated reviewer subagent without a separate approval prompt and reuses that same subagent for every review round.
 
 The implementation task remains the sole editor. The reviewer stays read-only. Valid findings are fixed and verified in the implementation task; incorrect findings receive evidence-based pushback. The workflow asks you before changing the approved specification, an approved decision, or the product scope.
 
