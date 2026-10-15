@@ -7,7 +7,7 @@ description: Use when an implementation task has completed work from a documente
 
 ## Overview
 
-Use one context-isolated subagent as the read-only reviewer. Keep the implementation task as the sole editor and continue until that same reviewer rereads the current code and returns an evidence-bearing clean verdict.
+Use one context-isolated subagent as the read-only reviewer. Keep the implementation task as the sole editor and continue until that same reviewer rereads the current code and returns an evidence-bearing clean verdict. Keep the review thorough and its handoff concise: actionable findings, a compact requirements map, and focused verification evidence.
 
 **REQUIRED SUB-SKILL:** Use `superpowers:receiving-code-review` before acting on findings.
 
@@ -23,7 +23,7 @@ Follow these rules literally:
 
 2. If the user replies before the timer expires, use that reply. If `wait_agent` returns early for an unrelated agent event, continue waiting for the remainder of the 30-second window; only a user reply or the full timeout resolves the gate. If the window expires without user input, select `gpt-6.1-sol` with reasoning `high` and continue automatically. If a reply is ambiguous or names an unsupported combination, ask the user to correct it instead of silently substituting a model.
 3. Spawn exactly one reviewer subagent with `spawn_agent` and `fork_turns: "none"`. Invoking this skill authorizes that reviewer dispatch; do not ask the user for a separate approval or confirmation before spawning it. Never use `create_thread`, `fork_thread`, a replacement reviewer, or a new reviewer per round. Continue the same subagent with `followup_task`.
-4. A clean response must start with the exact line `No findings.` and include every required Review evidence field with `Residual verification gaps: none`. A bare `No findings.` or an evidence section with missing verification is incomplete; send it back to the same reviewer instead of accepting it.
+4. A clean response must start with the exact line `No findings.` and include every required Review evidence field with `Residual verification gaps: none`. The compact requirements map must still account for every behavior assessed in Pass A. A bare `No findings.`, a generic "requirements checked", or an evidence section with missing verification is incomplete; send it back to the same reviewer instead of accepting it.
 
 Violating the letter of this contract violates the workflow.
 
@@ -39,12 +39,12 @@ The workflow below begins after the user answers the invocation gate or the 30-s
    - Put behavior and verification reported by the implementer under **Unverified implementer claims**. These are hypotheses for the reviewer to challenge, not review evidence.
 3. Call `spawn_agent` once with the selected model and reasoning, `fork_turns: "none"`, and the Reviewer Prompt Contract below. Use a short task name such as `iterative_code_review`. Keep the returned agent ID or canonical task name for the entire loop. Because subagents share the workspace, provide the absolute repository and artifact paths and require the reviewer to read the current checkout and working tree directly.
 4. Observe the reviewer with `wait_agent`. If the running reviewer asks an ordinary question whose answer is already authoritative in the repository or approved artifacts, answer it with `send_message`. If user authority is required, ask the user. Do not expose a separate task or ask the user to approve the reviewer dispatch.
-5. Validate the response contract before treating the round as complete. Require findings or the exact clean first line, both review passes, every Review evidence field, and an explicit residual-gap statement. Ask the same reviewer to complete an incomplete response; do not infer the missing evidence.
+5. Validate the response contract before treating the round as complete. Require findings, `No findings.`, or `Review incomplete.` as specified below, both review passes, every Review evidence field, a complete compact requirements map, and an explicit residual-gap statement. A valid `Review incomplete.` response records blocked verification and keeps completion blocked. Concise audit summaries satisfy the contract when they state the outcome and point to any exceptions. Ask the same reviewer to complete an incomplete response; do not infer the missing evidence.
 6. Triage every finding against the spec, plan, repository conventions, code, and evidence. Apply valid in-scope findings in the implementation task. Send technical pushback for incorrect findings. Ask the user before changing an approved decision, editing the spec, or expanding product scope. Never let the reviewer edit tracked files and never apply feedback merely to obtain approval.
 7. After fixes, run the narrowest relevant verification required by the repository. Use `followup_task` to send the same reviewer a concise disposition of every finding, the updated exact review target and changed-file inventory, and any unverified implementer claims. Require a fresh read of the current files and complete relevant diff, not merely the dispositions or fix summary.
 8. Repeat with the same reviewer while findings or verification gaps remain. Do not impose a round limit, replace the reviewer, self-approve, or stop after fixing the first round.
 9. Completion requires that same reviewer, after its latest reread, to return the complete evidence-bearing clean response with no residual verification gap. Then run the repository's final verification requirements. If final verification causes a code change, return the changed tree to the same reviewer again.
-10. Report the reviewer subagent, selected model/reasoning, rounds, resolved or rejected findings, exact verdict, review evidence, and final verification.
+10. Report the reviewer subagent, selected model/reasoning, rounds, resolved or rejected findings, exact verdict, a brief review-evidence summary, and final verification. Summarize the outcome without copying the full requirements map or earlier findings into the final handoff.
 
 ## Reviewer Prompt Contract
 
@@ -142,8 +142,11 @@ Run focused checks capable of challenging the changed behavior. If required
 focused verification cannot run, record the exact gap and do not present an
 unqualified clean verdict.
 
-For every actionable issue, provide an anchored file/line or smallest relevant
-symbol, impact, Critical/High/Medium/Low severity, and concrete improvement.
+For every actionable issue, assign a stable ID (F1, F2, ...) and provide an
+anchored file/line or smallest relevant symbol, Critical/High/Medium/Low severity,
+the trigger and impact, decisive evidence, and a concrete improvement. Preserve
+the reproduction or counterfactual that makes the issue assessable. Aim for one
+short paragraph per finding; expand when needed to explain the issue or fix.
 Use an example implementation only when it materially clarifies the fix.
 
 Use exactly one of these response shapes:
@@ -153,16 +156,36 @@ Use exactly one of these response shapes:
 - No findings but verification remains blocked: use `Review incomplete.` as the
   exact first line.
 
-Then always provide:
+Then provide the compact evidence below. Use one concise row per behavior or
+cohesive behavior group, with plan/spec references to identify the scope. Every
+new, removed, and explicitly preserved behavior assessed in Pass A must remain
+represented, including successful checks. Group behaviors only when their shared
+implementation and evidence support the whole group; split rows when the
+evidence or counterfactual outcome differs. Keep exact assertion/invariant
+anchors and the counterfactual result; a completion claim alone is insufficient.
+
+Each audit summary consists of its outcome and finding IDs for exceptions, as
+shown below. Detailed test configuration and traced support belong in a finding
+when they explain an exception. Scope confirmation consists of the inventory
+match and actual exclusions rather than a separate inspection narrative.
+Give decisive evidence once, in its finding or requirements row, and refer to it
+elsewhere. Summarize verification as command/test selector -> result, grouping
+related runs while preserving what ran and distinguishing passing checks from
+expected failing probes. For benchmarks, report the outcome against the required
+property and measurements that determine that outcome or explain a finding.
+Refer to the plan's review-focus items in the map instead of copying
+them verbatim. These are soft length targets: completeness, actionable findings,
+and verification gaps take priority over brevity. Additional audit artifacts are
+optional when requested or required by the repository.
 
 Review evidence:
-- Review target: VERIFIED_BASE..VERIFIED_HEAD plus staged/working-tree state
-- Requirements checked: behavior -> implementation -> exact assertion/invariant -> counterfactual result
+- Review target: VERIFIED_BASE..VERIFIED_HEAD, staged/working-tree state, inventory match or discrepancy, and any scope exclusions
+- Requirements checked: behavior/task reference -> implementation -> exact assertion/invariant -> counterfactual result or finding ID
 - Review passes completed: Pass A requirements/coverage; Pass B adversarial
-- Changed-test convention audit: test -> neighboring timeout/retry/setup/cleanup/assertion comparison
-- Removed-remnant audit: removed relationship/responsibility -> former support -> current consumer or finding
-- Pre-existing coverage context: none | unchanged gaps excluded from findings
-- Files and surrounding patterns inspected: ...
+- Audits:
+  - Changed-test conventions: matched neighboring timeout/retry/setup/cleanup/assertion patterns | exceptions -> finding IDs
+  - Removed remnants: none found | exceptions -> finding IDs
+  - Pre-existing coverage context: none | unchanged gaps excluded (brief scope only when relevant to a disposition)
 - Focused verification run: command -> result
 - Residual verification gaps: none | exact gap and impact
 ```
@@ -197,10 +220,16 @@ IMPLEMENTER_CLAIMS
 
 Repeat Pass A and Pass B from the original contract against the current target.
 Rerun the focused verification relevant to changed tests and fixes. Return
-remaining findings followed by every Review evidence field. If none remain and
-there are no residual verification gaps, use `No findings.` as the exact first
-line. If none remain but a verification gap persists, use `Review incomplete.`
-as the exact first line.
+remaining findings followed by every Review evidence field using the compact
+reporting rules. Retain finding IDs across rounds; give each prior finding a
+brief disposition with the evidence for resolution or continued disagreement.
+For an unchanged remaining finding, its ID, anchor, and remaining reason suffice;
+give new or materially changed findings the full finding detail. Keep the current
+requirements map complete and refresh its evidence against the reread target.
+The shorter report does not narrow either review pass or the required reread.
+If none remain and there are no residual verification gaps, use `No findings.`
+as the exact first line. If none remain but a verification gap persists, use
+`Review incomplete.` as the exact first line.
 ```
 
 ## Decision Reference
@@ -221,7 +250,7 @@ as the exact first line.
 - Reviewer invokes `iterating-code-reviews`, delegates, or starts another reviewer.
 - Review target omits the base/head, staged changes, or working-tree changes.
 - Implementer claims are presented as independent evidence.
-- Reviewer skips the requirements map, adversarial pass, assertion audit, or a relevant focused verification category.
+- Reviewer skips or replaces the requirements map with a generic completion claim, or skips the adversarial pass, assertion audit, or a relevant focused verification category.
 - Concrete Low regression or maintainability hazards are discarded as preferences.
 - A bare `No findings.` or a clean verdict with verification gaps is accepted.
 - Letting the reviewer edit tracked files or starting a fresh reviewer after fixes.

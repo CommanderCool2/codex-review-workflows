@@ -106,6 +106,8 @@ The implementation does not have to be fully committed: the reviewer inspects bo
 
 The implementation task remains the sole editor. The reviewer stays read-only. Valid findings are fixed and verified in the implementation task; incorrect findings receive evidence-based pushback. The workflow asks you before changing the approved specification, an approved decision, or the product scope.
 
+Review reports keep actionable findings and a compact requirements-to-evidence map covering every new, removed, and explicitly preserved behavior. Routine audits use brief outcome summaries, and decisive evidence appears once. Follow-up rounds retain finding IDs and give short dispositions while refreshing the complete map and relevant verification. Reporting length is a soft target; review scope, meaningful evidence, and explicit verification gaps remain required.
+
 Invoke the skill from the implementation task and include the artifact paths:
 
 ```text
